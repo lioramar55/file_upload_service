@@ -6,13 +6,27 @@ import fs from 'fs';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import logger from './src/utils/logger';
+import { validateApiKey } from './src/middleware/auth';
+import { uploadLimiter } from './src/middleware/rate-limit';
+import healthRoutes from './src/routes/health';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+
+// Basic middleware
 app.use(cors());
 app.use(express.json());
+
+// Health check routes (no auth required)
+app.use('/api', healthRoutes);
+
+// API key validation for protected routes
+app.use('/api', validateApiKey);
+
+// Rate limiting for upload endpoint
+app.use('/api/upload', uploadLimiter);
 
 // Environment-specific configuration
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -46,7 +60,7 @@ const upload = multer({
 app.use('/uploads', express.static(uploadDir!));
 
 // Image upload endpoint
-app.post('/upload', upload.single('image'), async (req: Request, res: Response): Promise<void> => {
+app.post('/api/upload', upload.single('image'), async (req: Request, res: Response): Promise<void> => {
 	try {
 		if (!req.file) {
 			logger.warn('Upload attempt with no file');

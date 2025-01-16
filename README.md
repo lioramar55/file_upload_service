@@ -11,6 +11,9 @@ A Node.js microservice for handling image uploads with automatic optimization an
 - Rotating logs with Winston
 - CORS support
 - TypeScript support
+- API Key authentication
+- Rate limiting
+- Health monitoring endpoint
 
 ## Prerequisites
 
@@ -36,6 +39,7 @@ PROD_UPLOAD_DIR=uploads/prod
 DEV_BASE_URL=http://localhost:3000
 PROD_BASE_URL=https://your-domain.com
 MAX_FILE_SIZE=5
+API_KEY=your-secure-api-key-here
 ```
 
 ## Development
@@ -58,6 +62,7 @@ npm run build
 
 ```bash
 export NODE_ENV=production
+export API_KEY=your-secure-api-key
 ```
 
 Or create a systemd service file (recommended).
@@ -79,6 +84,7 @@ After=network.target
 
 [Service]
 Environment=NODE_ENV=production
+Environment=API_KEY=your-secure-api-key
 WorkingDirectory=/path/to/your/app
 ExecStart=/usr/bin/npm start
 Restart=always
@@ -98,14 +104,28 @@ sudo systemctl start image-upload
 
 ## API Usage
 
+### Authentication
+
+All API endpoints (except health check) require an API key to be sent in the `X-API-Key` header:
+
+```
+X-API-Key: your-api-key
+```
+
+### Rate Limiting
+
+The upload endpoint is rate-limited to 100 requests per 15 minutes per IP address.
+
 ### Upload Image
 
-**Endpoint:** `POST /upload`
+**Endpoint:** `POST /api/upload`
 
 **Request:**
 
 - Method: POST
 - Content-Type: multipart/form-data
+- Headers:
+  - X-API-Key: your-api-key
 - Body:
   - image: File (supported formats: JPEG, PNG, GIF, WebP)
 
@@ -116,6 +136,30 @@ sudo systemctl start image-upload
 	"success": true,
 	"url": "http://your-domain.com/uploads/filename.jpg",
 	"filename": "timestamp-filename.jpg"
+}
+```
+
+### Health Check
+
+**Endpoint:** `GET /api/health`
+
+No authentication required. Returns system health metrics.
+
+**Response:**
+
+```json
+{
+	"status": "ok",
+	"timestamp": "2024-02-20T12:00:00Z",
+	"uptime": 3600,
+	"memory": {
+		"total": 8192,
+		"free": 4096,
+		"used": 4096
+	},
+	"cpu": {
+		"loadAvg": [1.5, 1.2, 1.0]
+	}
 }
 ```
 
@@ -158,9 +202,10 @@ server {
 
 1. Set up SSL/TLS certificates
 2. Configure proper file permissions
-3. Implement rate limiting
+3. Use a strong API key in production
 4. Set up proper firewall rules
 5. Regular security updates
+6. Monitor rate limiting and failed authentication attempts
 
 ## License
 
