@@ -117,7 +117,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
 	res.status(500).json({ error: err.message });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3030;
 app.listen(PORT, () => {
 	logger.info(`Server running in ${process.env.NODE_ENV} mode`, {
 		port: PORT,

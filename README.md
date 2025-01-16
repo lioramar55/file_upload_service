@@ -36,7 +36,6 @@ NODE_ENV=development
 PORT=3000
 DEV_UPLOAD_DIR=uploads/dev
 PROD_UPLOAD_DIR=uploads/prod
-DEV_BASE_URL=http://localhost:3000
 PROD_BASE_URL=https://your-domain.com
 MAX_FILE_SIZE=5
 API_KEY=your-secure-api-key-here
