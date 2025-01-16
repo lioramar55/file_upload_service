@@ -79,14 +79,20 @@ app.post('/api/upload', upload.single('image'), async (req: Request, res: Respon
 			mimetype: file.mimetype,
 		});
 
-		// Optimize and save the image
-		await sharp(file.buffer)
-			.resize(1920, 1080, {
-				fit: 'inside',
-				withoutEnlargement: true,
-			})
-			.jpeg({ quality: 80 })
-			.toFile(outputPath);
+		// Process the image based on its type
+		const image = sharp(file.buffer);
+		const metadata = await image.metadata();
+
+		if (metadata.format === 'jpeg' || metadata.format === 'jpg') {
+			await image.jpeg({ quality: 80 }).toFile(outputPath);
+		} else if (metadata.format === 'png') {
+			await image.png({ quality: 80 }).toFile(outputPath);
+		} else if (metadata.format === 'webp') {
+			await image.webp({ quality: 80 }).toFile(outputPath);
+		} else {
+			// For other formats (like GIF), save as is
+			await image.toFile(outputPath);
+		}
 
 		const imageUrl = `${baseUrl}/uploads/${filename}`;
 		logger.info(`Upload successful: ${filename}`, { url: imageUrl });
