@@ -77,6 +77,7 @@ app.post('/api/upload', upload.single('image'), async (req: Request, res: Respon
 			originalName: file.originalname,
 			size: file.size,
 			mimetype: file.mimetype,
+			outputPath,
 		});
 
 		// Process the image based on its type
